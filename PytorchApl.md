@@ -1,5 +1,7 @@
 # Building torch suite Windows on ARM64
 
+> Note: Commit test
+
 ## Pytorch
 1. **Install necessary tools:**
    - Visual Studio 2022 or VS Build Tools 2022 with the **Desktop C++ Development kit**
