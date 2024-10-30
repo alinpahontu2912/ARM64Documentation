@@ -1,71 +1,183 @@
-# Building torch suite Windows on ARM64
+# Building for Windows on ARM64
 
-> Note: Commit test
+1. [Prerequisites](#prerequisites)
+1. [Cloning PyTorch](#cloning-pytorch)
+1. [Preparing Environment](#preparing-environment)
+1. [Setting Environment Variables](#setting-environment-variables)
+1. [Build](#build)
+   1. [PyTorch](#pytorch)
+   1. [LibTorch](#libtorch)
 
-## Pytorch
-1. **Install necessary tools:**
-   - Visual Studio 2022 or VS Build Tools 2022 with the **Desktop C++ Development kit**
-   - Python 3.12 Arm64 from [Python Releases for Windows](https://www.python.org/downloads/windows/)
-   - Git for Windows from [git-scm.com](https://git-scm.com/downloads)
-   - If using **Build Tools**, make sure "ARM64/ARM64EC build tools" are installed from individual components
 
+## Prerequisites
 
-2. **Register ninja.exe in your PATH environment variable:**
-   - Download from [Ninja Releases](https://github.com/ninja-build/ninja/releases) and add it to PATH 
+1. [Build Tools for Visual Studio 2022](https://aka.ms/vs/17/release/vs_BuildTools.exe) **OR** any version of [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/)
+   
+   - Under **Workloads**, select **Desktop development with C++**
 
-3. **Download and install APL from [Arm Performance Libraries](https://developer.arm.com/tools-and-software/server-and-hpc/compile/arm-performance-libraries/downloads):**
-   - **Newest version (APL v24.10):**
-     - Download and run the the msi installer. The `%ARMPL_DIR%` environment variable will be added to your PATH by default.
-     - Note: Oldest supported APL version is 24.04
+   - Under **Individual Components**, select **ARM64/ARM64EC build tools (latest)**
 
-### Cloning and Setting Up PyTorch
-4. Clone the PyTorch repository and setup submodules:
-```
+1. [Python 3.12 Windows installer (ARM64)](https://www.python.org/downloads/windows/)
+
+1. Download and install [Arm Performance Libraries for Windows](https://developer.arm.com/Tools%20and%20Software/Arm%20Performance%20Libraries#Downloads)
+
+   - `%ARMPL_DIR%` environment variable should be automatically added to your `PATH` by default installation settings.
+
+1. Install [Rust](https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe)
+
+1. **(OPTIONAL)** You may install [sccache](https://github.com/mozilla/sccache/releases) for speeding up future builds by cache support.
+
+   - You need to add `sccache` to your `PATH` **manually**.
+
+## Cloning PyTorch
+
+1. Clone the PyTorch repository (or your fork)
+
+   ```cmd
    git clone --recursive https://github.com/pytorch/pytorch
    cd pytorch
-   # if you are updating an existing checkout
+   ```
+
+1. Init and sync submodules
+
+   ```cmd
    git submodule sync
    git submodule update --init --recursive
-```
-5. **Create a virtual environment and install requirements:**
-```
-   # Create virtual python environment (Optional)
-   python -m venv venv
-   echo * > ./venv/.gitignore
-   call .\venv\Scripts\activate
-   # Install requirements
+   ```
+
+## Preparing Environment
+
+> NOTE: Since currently `conda` [doesn't support Windows ARM64](https://github.com/conda/conda/issues/11472), instead we're recommending to use built-in Python `venv` functionality for similar isolating experience. ([more info](https://docs.python.org/3/library/venv.html))
+
+1. Creating a virtual environment (`venv`)
+
+   ```cmd
+   python -m pip install --upgrade pip
+   python -m venv .venv
+   echo * > .venv\.gitignore
+   call .\.venv\Scripts\activate
+   ```
+
+1. Install requirements
+
+   ```cmd
    pip install -r requirements.txt
-```
-   - Note: A Python virtual environment helps isolate dependencies to prevent conflicts with other projects. It’s especially helpful if you're working on multiple projects. However, if you're fine with installing everything globally and don’t need separation, you can skip the venv.
+   ```
 
-6. **Set up Arm64 Native Tools Command Prompt for VS2022:**
-   - Based on what you installed earlier, type:
-   - `"C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvarsarm64.bat"`
-   - `"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64`
-   - `"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" arm64`
-   - `"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64`
+1. Activate `Arm64 Native Tools Command Prompt for VS 2022` environment by calling one of the following commands based on what you've installed.
 
-### Environment Variables and Dependencies
-7. Set the following environment variables:
-```
+   - For Build Tools:
+
+      > "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+   - For Visual Studio 2022 Community:
+
+      > "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+   - For Visual Studio 2022 Enterprise:
+   
+      > "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" arm64
+
+   - For Visual Studio 2022 Preview:
+    
+      > "C:\Program Files\Microsoft Visual Studio\2022\Preview\VC\Auxiliary\Build\vcvarsarm64.bat" arm64
+   
+   
+
+## Setting Environment Variables
+1. Set the following environment variables:
+
+   ```cmd
    set BLAS=APL
-   set REL_WITH_DEB_INFO=1
-   set CMAKE_BUILD_TYPE=RelWithDebInfo
    set USE_LAPACK=1
-```
-8. **(Optional) Use sccache to speed up build times:** 
-   - Download the latest sccache from [sccache releases](https://github.com/mozilla/sccache/releases).
-   - Add `SCCACHE_CACHE_SIZE=30G` to system environments.
-   - Add the sccache binary folder to the PATH.
-   - Set the following variables in the build environment:
-     - `set CMAKE_C_COMPILER_LAUNCHER=sccache`
-     - `set CMAKE_CXX_COMPILER_LAUNCHER=sccache`
-   - Note: Using sccache can significantly speed up PyTorch builds by caching previous compilation results. This is especially useful if you're making frequent code changes, as it avoids re-compiling unchanged files.
- 
+   set CMAKE_C_COMPILER_LAUNCHER=sccache
+   set CMAKE_CXX_COMPILER_LAUNCHER=sccache
+   set MSSdk=1
+   set DISTUTILS_USE_SDK=1
+   ```
 
-6. **Build PyTorch:**
-```
-   python setup.py install
-```
+1. **(OPTIONAL)** If you want to use `sccache` for speeding up your future build by cache also set following.
 
-## Building Libtorch 
+   ```cmd
+   set CMAKE_C_COMPILER_LAUNCHER=sccache
+   set CMAKE_CXX_COMPILER_LAUNCHER=sccache
+   ```
+
+## Build
+
+You can generate `.whl` (wheel) file for `PyTorch` (for **Python package**) **OR** `.zip` file for `LibTorch` (for **C++ core**)
+
+### PyTorch
+
+1. Call following command to start build and generate output
+   ```
+   :: set PYTORCH_BUILD_VERSION=2.6.0   ## OPTIONAL: If you wish to give a specific versioning for `.whl` file 
+   :: set PYTORCH_BUILD_NUMBER=1        ## (for instance you can specify 2.6.0 as shown) 
+   python setup.py bdist_wheel
+   ```
+
+1. Output file will be under `dist` folder with `.whl` extension.
+   
+   - Format will look like `torch-FOO+gitBAR-cp312-cp312-win_arm64.whl`
+   
+   - **OR** if you specify version, format will be like `torch-2.6.0-cp312-cp312-win_arm64.whl`
+
+1. Now you can copy and install this `.whl` file anywhere in your system by calling
+
+   ```
+   pip install torch-YOURVERSION-cp312-cp312-win_arm64.whl
+   ```
+
+### LibTorch
+
+1. Additional preparation for `libtorch` folder
+
+   ```cmd
+   :: Options: Release, Debug or RelWithDebInfo
+   set CMAKE_BUILD_TYPE=Release
+
+   :: Prepare the environment
+   mkdir libtorch
+   mkdir libtorch\bin
+   mkdir libtorch\cmake
+   mkdir libtorch\include
+   mkdir libtorch\lib
+   mkdir libtorch\share
+   mkdir libtorch\test
+   ```
+
+1. Call following command to start build and generate output
+
+   ```cmd
+   python ./tools/build_libtorch.py
+   ```
+
+1. Prepare `.zip` file from `libtorch` output
+
+   ```cmd
+   :: Moving the files to the correct location
+   move /Y torch\bin\*.* libtorch\bin\
+   move /Y torch\cmake\*.* libtorch\cmake\
+   robocopy /move /e torch\include\ libtorch\include\
+   move /Y torch\lib\*.* libtorch\lib\
+   robocopy /move /e torch\share\ libtorch\share\
+   move /Y torch\test\*.* libtorch\test\
+   move /Y libtorch\bin\*.dll libtorch\lib\
+   
+   :: Create output under dist
+   mkdir dist
+   tar -cvaf dist/libtorch-win.zip -C libtorch *
+   
+   :: Cleanup raw data to save space
+   rmdir /s /q libtorch
+   ```
+
+1. Now you can copy and extract `dist/libtorch-win.zip` file anywhere in your system
+
+   - For C++ example, you can visit [Installing C++ Distributions of PyTorch](https://pytorch.org/cppdocs/installing.html)
+
+   - You can just add following line to your `CMakeLists.txt` file.
+
+      ```cmake
+      set(CMAKE_PREFIX_PATH "C:/YOUR_CORRESPONDING_PATH/libtorch-win")
+      ```
