@@ -109,36 +109,36 @@ You can generate a `.whl` (wheel) file for **PyTorch** (the Python package) **OR
 
 ### PyTorch
 
-1.**Generate a wheel file** (for distribution or installation on other systems):
+1. **Generate a wheel file** (for distribution or installation on other systems):
 
-Call following command to start build and generate output
+   Call following command to start build and generate output
    ```
    :: set PYTORCH_BUILD_VERSION=2.6.0   ## OPTIONAL: If you wish to give a specific versioning for `.whl` file 
    :: set PYTORCH_BUILD_NUMBER=1        ## (for instance you can specify 2.6.0 as shown) 
    python setup.py bdist_wheel
    ```
 
-Output file will be under `dist` folder with `.whl` extension.
+   Output file will be under `dist` folder with `.whl` extension.
    
-Format will look like `torch-FOO+gitBAR-cp312-cp312-win_arm64.whl`
+   Format will look like `torch-FOO+gitBAR-cp312-cp312-win_arm64.whl`
 **OR** if you specify version, format will be like `torch-2.6.0-cp312-cp312-win_arm64.whl`
 
-Now you can copy and install this `.whl` file anywhere in your system by calling
+   Now you can copy and install this `.whl` file anywhere in your system by calling
 
    ```
    pip install torch-YOURVERSION-cp312-cp312-win_arm64.whl
    ```
 
-2.**Without generating wheel file** (for development on your system only)
+1. **Without generating wheel file** (for development on your system only)
 
-Run one of the following commands to initiate the build:
+   Run one of the following commands to initiate the build:
 
-   Install the package in development mode, ideal when making frequent changes to codebase
+   - Install the package in development mode, ideal when making frequent changes to codebase
    ```
    python setup.py develop 
    ```
 
-   Install the package for regular use, rather than ongoing development
+   - Install the package for regular use, rather than ongoing development
    ```
    python setup.py install 
    ```
