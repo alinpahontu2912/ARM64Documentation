@@ -90,8 +90,6 @@
    ```cmd
    set BLAS=APL
    set USE_LAPACK=1
-   set CMAKE_C_COMPILER_LAUNCHER=sccache
-   set CMAKE_CXX_COMPILER_LAUNCHER=sccache
    set MSSdk=1
    set DISTUTILS_USE_SDK=1
    ```
@@ -109,7 +107,7 @@ You can generate a `.whl` (wheel) file for **PyTorch** (the Python package) **OR
 
 ### PyTorch
 
-1. **Generate a wheel file** (for distribution or installation on other systems):
+1. **OPTION 1 - Generating and Installing Wheel File** (for distribution or installation on other systems):
 
    Call following command to start build and generate output
    ```
@@ -129,7 +127,7 @@ You can generate a `.whl` (wheel) file for **PyTorch** (the Python package) **OR
    pip install torch-YOURVERSION-cp312-cp312-win_arm64.whl
    ```
 
-1. **Without generating wheel file** (for development on your system only)
+1. **OPTION 2 - Directly Installing to Local Environment** (for development on your system only)
 
    Run one of the following commands to initiate the build:
 
